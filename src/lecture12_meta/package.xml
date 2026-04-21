@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>lecture12_meta</name>
+  <version>0.0.1</version>
+  <description>Metapackage for Lecture 12.</description>
+  <maintainer email="zeidk@umd.edu">Zeid Kootbally</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <depend>rqt_tf_tree</depend>
+  <depend>rqt_image_view</depend>
+
+  <!-- Lecture 12 Python packages -->
+  <exec_depend>namespace_demo</exec_depend>
+  <exec_depend>remapping_demo</exec_depend>
+  <exec_depend>lifecycle_demo</exec_depend>
+  <exec_depend>bt_demo</exec_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
