@@ -10,6 +10,8 @@
 
   <depend>rqt_tf_tree</depend>
   <depend>rqt_image_view</depend>
+  <depend>py_trees</depend>
+  <depend>py_trees_ros</depend>
 
   <!-- Lecture 12 Python packages -->
   <exec_depend>namespace_demo</exec_depend>

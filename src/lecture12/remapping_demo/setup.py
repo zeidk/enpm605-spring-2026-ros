@@ -24,7 +24,7 @@ setup(
     license="Apache-2.0",
     entry_points={
         "console_scripts": [
-            "camera_node = remapping_demo.scripts.main_camera_node:main",
+            "camera_demo = remapping_demo.scripts.main_camera_node:main",
             "image_processor = remapping_demo.scripts.main_image_processor:main",
         ],
     },

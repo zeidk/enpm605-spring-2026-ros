@@ -18,8 +18,8 @@ setup(
     license="Apache-2.0",
     entry_points={
         "console_scripts": [
-            "sensor_publisher = lifecycle_demo.scripts.main_sensor_publisher:main",
-            "self_cycling_node = lifecycle_demo.scripts.main_self_cycling_node:main",
+            "sensor_pub_exe = lifecycle_demo.scripts.main_sensor_publisher_node:main",
+            "self_cycling_exe = lifecycle_demo.scripts.main_self_cycling_node:main",
         ],
     },
 )

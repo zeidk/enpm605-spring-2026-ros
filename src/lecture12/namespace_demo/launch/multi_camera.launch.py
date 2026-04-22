@@ -4,13 +4,13 @@ from launch_ros.actions import Node
 def generate_launch_description():
     front_camera = Node(
         package='namespace_demo',
-        executable='camera_node',
+        executable='camera_demo',
         namespace='front',
         output='screen',
     )
     rear_camera = Node(
         package='namespace_demo',
-        executable='camera_node',
+        executable='camera_demo',
         namespace='rear',
         output='screen',
     )
