@@ -1,3 +1,6 @@
+import os
+from glob import glob
+
 from setuptools import find_packages, setup
 
 package_name = "bt_demo"
@@ -9,6 +12,7 @@ setup(
     data_files=[
         ("share/ament_index/resource_index/packages", ["resource/" + package_name]),
         ("share/" + package_name, ["package.xml"]),
+        (os.path.join("share", package_name, "launch"), glob("launch/*.launch.py")),
     ],
     install_requires=["setuptools"],
     zip_safe=True,
@@ -18,8 +22,7 @@ setup(
     license="Apache-2.0",
     entry_points={
         "console_scripts": [
-            "drive_to_goal = bt_demo.scripts.main_drive_to_goal:main",
-            "drive_to_goal_with_recovery = bt_demo.scripts.main_drive_to_goal_with_recovery:main",
+            "drive_to_goal_exe = bt_demo.scripts.main_drive_to_goal:main",
         ],
     },
 )

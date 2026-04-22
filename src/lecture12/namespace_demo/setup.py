@@ -24,7 +24,7 @@ setup(
     license="Apache-2.0",
     entry_points={
         "console_scripts": [
-            "camera_demo = namespace_demo.scripts.main_camera_node:main",
+            "camera_demo_exe = namespace_demo.scripts.main_camera_node:main",
         ],
     },
 )
