@@ -6,6 +6,7 @@ from launch.actions import (
     IncludeLaunchDescription,
     LogInfo
 )
+from launch.conditions import IfCondition
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.substitutions import FindPackageShare
 from launch.launch_description_sources import PythonLaunchDescriptionSource
@@ -92,14 +93,43 @@ def generate_launch_description():
         output='screen'
     )
 
+    # Launch argument: whether to run the navigation demo node
+    run_nav_node_arg = DeclareLaunchArgument(
+        "run_nav_node",
+        default_value="false",
+        description="Set to 'true' to launch the navigation_node_exe demo node",
+    )
+
+    # Launch argument: navigation mode ("waypoints" or "single_goal")
+    mode_arg = DeclareLaunchArgument(
+        "mode",
+        default_value="waypoints",
+        description="Navigation mode: 'waypoints' (follow 3 waypoints) "
+                    "or 'single_goal' (navigate to a single goal)",
+    )
+
+    # Navigation demo node (only launched if run_nav_node:=true)
+    navigation_demo_node = Node(
+        package="mapping_navigation_demo",
+        executable="navigation_node_exe",
+        name="navigation_node",
+        output="screen",
+        emulate_tty=True,
+        parameters=[{"use_sim_time": True, "mode": LaunchConfiguration("mode")}],
+        condition=IfCondition(LaunchConfiguration("run_nav_node")),
+    )
+
     # Add the launch arguments first
     ld.add_action(use_sim_time_arg)
     ld.add_action(map_file_arg)
+    ld.add_action(run_nav_node_arg)
+    ld.add_action(mode_arg)
     ld.add_action(log_map_path)
-    
+
     # Add actions in the correct order
     ld.add_action(localization_launch)  # Using standard localization launch file
     ld.add_action(navigation_launch)
     ld.add_action(rviz_node)
-    
+    ld.add_action(navigation_demo_node)
+
     return ld

@@ -3,7 +3,7 @@
 <package format="3">
   <name>mapping_navigation_demo</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
+  <description>Mapping and navigation demos using SLAM Toolbox, AMCL, and Nav2 with the ROSbot in Gazebo.</description>
   <maintainer email="zeidk@umd.edu">zeidk</maintainer>
   <license>Apache-2.0</license>
 

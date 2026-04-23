@@ -25,12 +25,12 @@ setup(
     zip_safe=True,
     maintainer='zeidk',
     maintainer_email='zeidk@umd.edu',
-    description='TODO: Package description',
+    description='Mapping and navigation demos using SLAM Toolbox, AMCL, and Nav2 with the ROSbot in Gazebo.',
     license='Apache-2.0',
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            "navigation_node = mapping_navigation_demo.navigation_demo_interface:main",
+            "navigation_node_exe = mapping_navigation_demo.scripts.main_navigation_demo:main",
         ],
     },
 )

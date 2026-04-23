@@ -67,6 +67,7 @@ bt_navigator:
 
 controller_server:
   ros__parameters:
+    enable_stamped_cmd_vel: True
     controller_frequency: 20.0
     costmap_update_timeout: 0.30
     min_x_velocity_threshold: 0.001
@@ -99,23 +100,24 @@ controller_server:
       time_steps: 56
       model_dt: 0.05
       batch_size: 2000
-      ax_max: 3.0
-      ax_min: -3.0
+      ax_max: 5.0
+      ax_min: -5.0
       ay_max: 3.0
       ay_min: -3.0
       az_max: 3.5
       vx_std: 0.2
       vy_std: 0.2
       wz_std: 0.4
-      vx_max: 0.5
-      vx_min: -0.35
+      vx_max: 1.0
+      vx_min: -0.5
       vy_max: 0.5
       wz_max: 1.9
       iteration_count: 1
       prune_distance: 1.7
       transform_tolerance: 0.1
-      temperature: 0.3
+      temperature: 0.25
       gamma: 0.015
+      enforce_path_inversion: false
       motion_model: "DiffDrive"
       visualize: true
       regenerate_noises: true
@@ -145,12 +147,12 @@ controller_server:
       PreferForwardCritic:
         enabled: true
         cost_power: 1
-        cost_weight: 5.0
+        cost_weight: 3.0
         threshold_to_consider: 0.5
       CostCritic:
         enabled: true
         cost_power: 1
-        cost_weight: 3.81
+        cost_weight: 2.0
         near_collision_cost: 253
         critical_cost: 300.0
         consider_footprint: false
@@ -160,7 +162,7 @@ controller_server:
       PathAlignCritic:
         enabled: true
         cost_power: 1
-        cost_weight: 14.0
+        cost_weight: 5.0
         max_path_occupancy_ratio: 0.05
         trajectory_point_step: 4
         threshold_to_consider: 0.5
@@ -201,7 +203,7 @@ local_costmap:
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
         cost_scaling_factor: 3.0
-        inflation_radius: 0.70
+        inflation_radius: 0.30
       voxel_layer:
         plugin: "nav2_costmap_2d::VoxelLayer"
         enabled: True
@@ -258,7 +260,7 @@ global_costmap:
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
         cost_scaling_factor: 3.0
-        inflation_radius: 0.7
+        inflation_radius: 0.30
       always_send_full_costmap: True
 
 # The yaml_filename does not need to be specified since it going to be set by defaults in launch.
@@ -297,6 +299,7 @@ smoother_server:
 
 behavior_server:
   ros__parameters:
+    enable_stamped_cmd_vel: True
     local_costmap_topic: local_costmap/costmap_raw
     global_costmap_topic: global_costmap/costmap_raw
     local_footprint_topic: local_costmap/published_footprint
@@ -362,7 +365,8 @@ velocity_smoother:
     stamp_smoothed_velocity_with_smoothing_time: False
     scale_velocities: False
     feedback: "OPEN_LOOP"
-    max_velocity: [0.5, 0.0, 2.0]
+    enable_stamped_cmd_vel: True
+    max_velocity: [1.0, 0.0, 2.0]
     min_velocity: [-0.5, 0.0, -2.0]
     max_accel: [2.5, 0.0, 3.2]
     max_decel: [-2.5, 0.0, -3.2]
@@ -377,6 +381,7 @@ collision_monitor:
     odom_frame_id: "odom"
     cmd_vel_in_topic: "cmd_vel_smoothed"
     cmd_vel_out_topic: "cmd_vel"
+    enable_stamped_cmd_vel: True
     state_topic: "collision_monitor_state"
     transform_tolerance: 0.2
     source_timeout: 1.0
@@ -389,11 +394,11 @@ collision_monitor:
       type: "polygon"
       action_type: "approach"
       footprint_topic: "/local_costmap/published_footprint"
-      time_before_collision: 1.2
-      simulation_time_step: 0.1
+      time_before_collision: 0.1
+      simulation_time_step: 0.02
       min_points: 6
       visualize: False
-      enabled: True
+      enabled: False
     observation_sources: ["scan"]
     scan:
       type: "scan"
@@ -404,6 +409,7 @@ collision_monitor:
 
 docking_server:
   ros__parameters:
+    enable_stamped_cmd_vel: True
     controller_frequency: 50.0
     initial_perception_timeout: 5.0
     wait_charge_timeout: 5.0
