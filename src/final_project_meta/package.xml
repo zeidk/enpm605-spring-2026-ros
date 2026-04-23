@@ -1,0 +1,49 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>final_project_meta</name>
+  <version>0.0.1</version>
+  <description>Metapackage for the Final Project (Search and Rescue).
+  </description>
+  <maintainer email="zeidk@umd.edu">Zeid Kootbally</maintainer>
+  <maintainer email="zeidk@umd.edu">Zeid Kootbally</maintainer>
+  <maintainer email="zeidk@umd.edu">Zeid Kootbally</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <depend>rqt_tf_tree</depend>
+  <depend>slam_toolbox</depend>
+  <depend>nav_msgs</depend>
+  <depend>rqt_image_view</depend>
+  <depend>geometry_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>nav2_simple_commander</depend>
+  <depend>py_trees</depend>
+  <depend>py_trees_ros</depend>
+  <depend>tf2_ros</depend>
+
+  <!-- Rosbot simulation packages (ament_cmake, built with Release) -->
+  <exec_depend>husarion_components_description</exec_depend>
+  <exec_depend>husarion_gz_worlds</exec_depend>
+  <exec_depend>husarion_mecanum_drive_controller</exec_depend>
+  <exec_depend>low_pass_filter</exec_depend>
+  <exec_depend>twist_mux_controller</exec_depend>
+  <exec_depend>rosbot</exec_depend>
+  <exec_depend>rosbot_bringup</exec_depend>
+  <exec_depend>rosbot_controller</exec_depend>
+  <exec_depend>rosbot_description</exec_depend>
+  <exec_depend>rosbot_gazebo</exec_depend>
+  <exec_depend>rosbot_hardware_interfaces</exec_depend>
+  <exec_depend>rosbot_joy</exec_depend>
+  <exec_depend>rosbot_localization</exec_depend>
+  <exec_depend>rosbot_moveit</exec_depend>
+  <exec_depend>rosbot_utils</exec_depend>
+
+  <!-- add your two packages here -->
+  <!-- <exec_depend>group<N>_final_interfaces</exec_depend>
+  <exec_depend>group<N>_final</exec_depend> -->
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
