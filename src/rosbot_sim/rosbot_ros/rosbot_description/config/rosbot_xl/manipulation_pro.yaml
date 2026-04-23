@@ -1,0 +1,11 @@
+---
+components:
+  - type: LDR06
+    parent_link: cover_link
+    xyz: -0.01 0.0 0.0
+    rpy: 0.0 0.0 0.0
+
+  - type: CAM05
+    parent_link: link5
+    xyz: 0.02 0.0 0.07
+    rpy: 0.0 0.2 0.0

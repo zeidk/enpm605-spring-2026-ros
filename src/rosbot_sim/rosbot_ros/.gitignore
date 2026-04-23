@@ -1,0 +1,16 @@
+.vscode
+*.pyc
+
+# ROS 2 build folders
+build
+install
+log
+
+# ROSbots submodules
+husarion_components_description/
+husarion_controllers/
+husarion_gz_worlds/
+micro-ROS-Agent/
+
+# pyspelling
+*.dic

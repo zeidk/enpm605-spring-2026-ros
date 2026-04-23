@@ -1,0 +1,251 @@
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Changelog for package rosbot_description
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+0.18.8 (2026-03-02)
+-------------------
+* Remove conditional dependencies
+* Migrate rest of the ament_python pkg to ament_cmake
+* Contributors: rafal-gorecki
+
+0.18.7 (2026-02-27)
+-------------------
+* Update public action version in workflow
+* Contributors: rafal-gorecki
+
+0.18.6 (2026-02-27)
+-------------------
+* Unnecesary auto release
+* Contributors: rafal-gorecki
+
+0.18.5 (2026-02-27)
+-------------------
+* prepare for apt release: execute catkin_generate_changelog manually
+* Contributors: rafal-gorecki
+
+0.18.4 (2026-02-27)
+-------------------
+* rosbot_bringup: migrate ament_python pkg to ament_cmake package
+* Contributors: rafal-gorecki
+
+0.18.3 (2026-02-26)
+-------------------
+* Use apt instead pip dependencies (python3-pyftdi-pip to python3-ftdi)
+* Contributors: rafal-gorecki
+
+0.18.2 (2026-02-26)
+-------------------
+* Migrate ROS2 launch from Python to YAML
+* Contributors: rafal-gorecki
+
+0.18.1 (2025-12-10)
+-------------------
+* Exceed arm_activate timeout
+* Add Husarion packages of: open_manipulator_description, open_manipulator_joy, open_manipulator_moveit
+* Use fixed mecanum controller
+* Contributors: rafal-gorecki
+
+0.18.0 (2025-12-08)
+-------------------
+* Add rosbot_hardware_interfaces into rosbot_ros
+* Fix: wrong frame_id in simulated sensors when namespace is used
+* Enable color logs
+* Add stm32flasher dependency
+* Reduce number of controller config files
+* One spawner for all controllers (reduce number of spawn node)
+* Add activate_arm arg
+* Add a script to activate/deactivate the arm
+* Rename topic: imu_broadcaster/imu to imu/data
+* Contributors: rafal-gorecki
+
+0.17.0 (2025-11-06)
+-------------------
+* Add common config directory with script to create it and arg to load it.
+* Contributors: rafal-gorecki
+
+0.16.1 (2025-07-17)
+-------------------
+* Set Rplidar S2 as default ROSbot 3 option
+* Use husarion_components_description
+* Fix manipulator pro configuration
+* More detailed manipulator instruction
+* Contributors: rafal-gorecki
+
+0.16.0 (2025-06-12)
+-------------------
+* New ROSbot 3: URDF addjustment
+* Add rosbot_joy pkg
+* Improvements in open manipulator (namespace, movement)
+* Add graphic for controling manipulator using gamepad
+* Add backport action
+* Decrease number of dependencies
+* Auto selecting mecanum wheel for ROSbot XL
+* Simplify workflows
+* Contributors: rafal-gorecki
+
+0.15.1 (2025-04-09)
+-------------------
+* Fix bugs and tests
+* Contributors: rafal-gorecki
+
+0.15.0 (2025-04-07)
+-------------------
+* Add ROSbot XL source code
+* Select robot model based on robot_model arg
+* Reduce dependencies and simplify manipulator support
+* Add manipulator documentation
+* Contributors: rafal-gorecki
+
+0.14.0 (2024-08-07)
+-------------------
+* New ROS Jazzy distribution support
+* Flash firmvare using rear usb port
+* Freez external dependencies (use commit_id)
+* Shutdown whole if spawner failed
+* Use bringup.launch.py instead combined.launch.py (add microros.launch.py)
+* Cleaner flashing script logs
+* Add laser scan filter
+* Clean up repository: delete unused args, remove tools folder
+* Contributors: rafal-gorecki
+
+0.13.2 (2024-05-08)
+-------------------
+* Update rosbot_hardware.repos
+* Use FindPackageShare instead of get_package_share_directory
+* Contributors: rafal-gorecki
+
+0.13.1 (2024-02-01)
+-------------------
+* Use available in rosdep python3-libgpiod instead python-periphery-pip
+* Contributors: rafal-gorecki
+
+0.13.0 (2024-01-15)
+-------------------
+* Add Gazebo tests with namespace
+* Contributors: Jakub Delicat, rafal-gorecki
+
+0.12.0 (2024-01-02)
+-------------------
+* Using firmware 0.11.0
+* Contributors: Dominik Nowak
+
+0.11.1 (2023-12-29)
+-------------------
+* New firmware with rear panel usb connection
+* Fix pre-commit
+* Contributors: Dominik Nowak
+
+0.11.0 (2023-12-08)
+-------------------
+* Add micro-ros launcher to rosbot_bringup
+* micro-ros handle ROS_LOCALHOST_ONLY=1
+* Contributors: Dominik Nowak
+
+0.10.4 (2023-12-01)
+-------------------
+* Add bringup tests with namespace
+* Use package:// instead of file://
+* Fix test: wait for velocity stabilization
+* Contributors: Jakub Delicat, rafal-gorecki
+
+0.10.3 (2023-11-08)
+-------------------
+* Improve ekf covariances
+* Contributors: rafal-gorecki
+
+0.10.2 (2023-11-07)
+-------------------
+* Test odometry correctness in simulation
+* Contributors: Jakub Delicat, rafal-gorecki
+
+0.10.1 (2023-10-25)
+-------------------
+* Add pre-commit workflow
+* Remove unnecesary style-releated workflow
+* Contributors: rafal-gorecki
+
+0.10.0 (2023-10-24)
+-------------------
+* Add pre-commit
+* Contributors: Jakub Delicat
+
+0.9.0 (2023-10-16)
+------------------
+* Fix gazebo test
+* Contributors: Jakub Delicat, rafal-gorecki
+
+0.8.5 (2023-10-11)
+------------------
+* Merge pull request `#70 <https://github.com/husarion/rosbot_ros/issues/70>`_ from husarion/test-gazebo
+  Test gazebo
+* Merge remote-tracking branch 'origin/test-gazebo' into test-gazebo
+* Merge branch 'humble' into test-gazebo
+* Contributors: Jakub Delicat, rafal-gorecki
+
+0.8.4 (2023-09-21)
+------------------
+* Merge branch 'humble' into test-ekf
+* Merge branch 'humble' into test-spellcheck
+* Contributors: rafal-gorecki
+
+0.8.3 (2023-09-20)
+------------------
+* Merge remote-tracking branch 'origin/humble' into test-black
+* Merge remote-tracking branch 'origin/humble' into test-bringup
+* Merge branch 'test-description' into test-bringup
+* Contributors: Jakub Delicat
+
+0.8.2 (2023-09-01)
+------------------
+
+0.8.1 (2023-08-31)
+------------------
+
+0.8.0 (2023-08-16)
+------------------
+
+0.7.0 (2023-07-31)
+------------------
+
+0.6.1 (2023-05-19)
+------------------
+
+0.6.0 (2023-05-04)
+------------------
+* Merge pull request `#45 <https://github.com/husarion/rosbot_ros/issues/45>`_ from husarion/add-mecanum-wheels
+  Add mecanum wheels in real robot and simulation
+* Merge remote-tracking branch 'origin/humble' into add-mecanum-wheels
+* Contributors: Jakub Delicat
+
+0.5.1 (2023-04-03)
+------------------
+
+0.5.0 (2023-03-22)
+------------------
+* Merge pull request `#43 <https://github.com/husarion/rosbot_ros/issues/43>`_ from Kotochleb/humble-add-ignition-support
+  Add ignition support
+* Contributors: Jakub Delicat
+
+0.4.0 (2023-03-09)
+------------------
+* Merge pull request `#42 <https://github.com/husarion/rosbot_ros/issues/42>`_ from husarion/webots
+  Moved webots topics remappings to husarion/webots_ros2
+* Contributors: Jakub Delicat
+
+0.3.0 (2023-02-01)
+------------------
+* Merge pull request `#38 <https://github.com/husarion/rosbot_ros/issues/38>`_ from husarion/refactor-project-struct
+  Refactor project struct
+* Merge remote-tracking branch 'origin/humble' into add-ros-components-description
+* Contributors: Jakub Delicat
+
+0.2.1 (2023-01-18)
+------------------
+
+0.2.0 (2023-01-07)
+------------------
+* Merge pull request `#36 <https://github.com/husarion/rosbot_ros/issues/36>`_ from husarion/update-workflow
+  Update workflow
+* Merge pull request `#32 <https://github.com/husarion/rosbot_ros/issues/32>`_ from husarion/vel-feedback-units-change
+  Remove ros2 control wheel radius parameter
+* Contributors: Jakub Delicat

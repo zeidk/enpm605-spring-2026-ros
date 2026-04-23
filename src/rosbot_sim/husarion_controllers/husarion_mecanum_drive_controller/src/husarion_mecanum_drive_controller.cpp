@@ -1,0 +1,722 @@
+// Copyright 2020 PAL Robotics S.L.
+// Copyright 2022 Husarion
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+/*
+ * Author: Bence Magyar, Enrique Fernández, Manuel Meraz
+ */
+
+// Copied and adapted from diff_drive_controller (https://github.com/ros-controls/ros2_controllers)
+// Based on: https://ecam-eurobot.github.io/Tutorials/mechanical/mecanum.html
+// Author: Maciej Stępień
+
+#include "husarion_mecanum_drive_controller/husarion_mecanum_drive_controller.hpp"
+
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
+
+#include <hardware_interface/types/hardware_interface_type_values.hpp>
+#include <lifecycle_msgs/msg/state.hpp>
+#include <rclcpp/logging.hpp>
+#include <tf2/LinearMath/Quaternion.hpp>
+
+namespace
+{
+constexpr auto DEFAULT_COMMAND_TOPIC = "~/cmd_vel";
+constexpr auto DEFAULT_COMMAND_OUT_TOPIC = "~/cmd_vel_out";
+constexpr auto DEFAULT_ODOMETRY_TOPIC = "~/odom";
+constexpr auto DEFAULT_TRANSFORM_TOPIC = "/tf";
+}  // namespace
+
+namespace husarion_mecanum_drive_controller
+{
+using namespace std::chrono_literals;
+using controller_interface::interface_configuration_type;
+using controller_interface::InterfaceConfiguration;
+using hardware_interface::HW_IF_POSITION;
+using hardware_interface::HW_IF_VELOCITY;
+using lifecycle_msgs::msg::State;
+
+MecanumDriveController::MecanumDriveController()
+: controller_interface::ChainableControllerInterface()
+{
+}
+
+const char * MecanumDriveController::feedback_type() const
+{
+  return params_.position_feedback ? HW_IF_POSITION : HW_IF_VELOCITY;
+}
+
+controller_interface::CallbackReturn MecanumDriveController::on_init()
+{
+  try {
+    // Create the parameter listener and get the parameters
+    param_listener_ = std::make_shared<ParamListener>(get_node());
+    params_ = param_listener_->get_params();
+  } catch (const std::exception & e) {
+    fprintf(stderr, "Exception thrown during init stage with message: %s \n", e.what());
+    return controller_interface::CallbackReturn::ERROR;
+  }
+
+  return controller_interface::CallbackReturn::SUCCESS;
+}
+
+InterfaceConfiguration MecanumDriveController::command_interface_configuration() const
+{
+  std::vector<std::string> conf_names;
+  conf_names.push_back(front_left_wheel_name_ + "/" + HW_IF_VELOCITY);
+  conf_names.push_back(front_right_wheel_name_ + "/" + HW_IF_VELOCITY);
+  conf_names.push_back(rear_left_wheel_name_ + "/" + HW_IF_VELOCITY);
+  conf_names.push_back(rear_right_wheel_name_ + "/" + HW_IF_VELOCITY);
+  return {interface_configuration_type::INDIVIDUAL, conf_names};
+}
+
+InterfaceConfiguration MecanumDriveController::state_interface_configuration() const
+{
+  std::vector<std::string> conf_names;
+  conf_names.push_back(front_left_wheel_name_ + "/" + feedback_type());
+  conf_names.push_back(front_right_wheel_name_ + "/" + feedback_type());
+  conf_names.push_back(rear_left_wheel_name_ + "/" + feedback_type());
+  conf_names.push_back(rear_right_wheel_name_ + "/" + feedback_type());
+  return {interface_configuration_type::INDIVIDUAL, conf_names};
+}
+
+controller_interface::return_type MecanumDriveController::update_reference_from_subscribers(
+  const rclcpp::Time & time, const rclcpp::Duration & /*period*/)
+{
+  auto logger = get_node()->get_logger();
+  if (get_lifecycle_state().id() == State::PRIMARY_STATE_INACTIVE) {
+    if (!is_halted) {
+      halt();
+      is_halted = true;
+    }
+    return controller_interface::return_type::OK;
+  }
+
+  const std::shared_ptr<TwistStamped> last_command_msg = *(received_velocity_msg_ptr_.readFromRT());
+
+  if (last_command_msg == nullptr) {
+    RCLCPP_WARN(logger, "Velocity message received was a nullptr.");
+    return controller_interface::return_type::ERROR;
+  }
+
+  const auto age_of_last_command = time - last_command_msg->header.stamp;
+  // Brake if cmd_vel has timeout, override the stored command
+  if (age_of_last_command > cmd_vel_timeout_) {
+    reference_interfaces_[0] = 0.0;
+    reference_interfaces_[1] = 0.0;
+    reference_interfaces_[2] = 0.0;
+  } else if (
+    std::isfinite(last_command_msg->twist.linear.x) &&
+    std::isfinite(last_command_msg->twist.linear.y) &&
+    std::isfinite(last_command_msg->twist.angular.z)) {
+    reference_interfaces_[0] = last_command_msg->twist.linear.x;
+    reference_interfaces_[1] = last_command_msg->twist.linear.y;
+    reference_interfaces_[2] = last_command_msg->twist.angular.z;
+  } else {
+    RCLCPP_WARN_SKIPFIRST_THROTTLE(
+      logger, *get_node()->get_clock(), 1000,
+      "Command message contains NaNs. Not updating reference interfaces.");
+  }
+
+  return controller_interface::return_type::OK;
+}
+
+controller_interface::return_type MecanumDriveController::update_and_write_commands(
+  const rclcpp::Time & time, const rclcpp::Duration & period)
+{
+  auto logger = get_node()->get_logger();
+
+  double & linear_command_x = reference_interfaces_[0];
+  double & linear_command_y = reference_interfaces_[1];
+  double & angular_command = reference_interfaces_[2];
+  if (get_lifecycle_state().id() == State::PRIMARY_STATE_INACTIVE) {
+    if (!is_halted) {
+      halt();
+      is_halted = true;
+    }
+    return controller_interface::return_type::OK;
+  }
+
+  previous_update_timestamp_ = time;
+
+  // Apply (possibly new) multipliers:
+  const double wheel_separation_x = params_.wheel_separation_x_multiplier *
+                                    params_.wheel_separation_x;
+  const double wheel_separation_y = params_.wheel_separation_y_multiplier *
+                                    params_.wheel_separation_y;
+  const double wheel_radius = params_.wheel_radius_multiplier * params_.wheel_radius;
+
+  if (params_.open_loop) {
+    odometry_.updateOpenLoop(linear_command_x, linear_command_y, angular_command, time);
+  } else {
+    const double front_left_feedback =
+      registered_front_left_wheel_handle_->feedback.get().get_optional().value();
+    const double front_right_feedback =
+      registered_front_right_wheel_handle_->feedback.get().get_optional().value();
+    const double rear_left_feedback =
+      registered_rear_left_wheel_handle_->feedback.get().get_optional().value();
+    const double rear_right_feedback =
+      registered_rear_right_wheel_handle_->feedback.get().get_optional().value();
+
+    if (
+      std::isnan(front_left_feedback) || std::isnan(front_right_feedback) ||
+      std::isnan(rear_left_feedback) || std::isnan(rear_right_feedback)) {
+      RCLCPP_ERROR(logger, "One of the wheel feedbacks %s is invalid", feedback_type());
+      return controller_interface::return_type::ERROR;
+    }
+
+    if (params_.position_feedback) {
+      odometry_.update(
+        front_left_feedback, front_right_feedback, rear_left_feedback, rear_right_feedback, time);
+    } else {
+      odometry_.updateFromVelocity(
+        front_left_feedback * wheel_radius * period.seconds(),
+        front_right_feedback * wheel_radius * period.seconds(),
+        rear_left_feedback * wheel_radius * period.seconds(),
+        rear_right_feedback * wheel_radius * period.seconds(), time);
+    }
+  }
+
+  tf2::Quaternion orientation;
+  orientation.setRPY(0.0, 0.0, odometry_.getHeading());
+
+  bool should_publish = false;
+  try {
+    if (previous_publish_timestamp_ + publish_period_ < time) {
+      previous_publish_timestamp_ += publish_period_;
+      should_publish = true;
+    }
+  } catch (const std::runtime_error &) {
+    // Handle exceptions when the time source changes and initialize publish timestamp
+    previous_publish_timestamp_ = time;
+    should_publish = true;
+  }
+
+  if (should_publish) {
+    if (realtime_odometry_publisher_->trylock()) {
+      auto & odometry_message = realtime_odometry_publisher_->msg_;
+      odometry_message.header.stamp = time;
+      odometry_message.pose.pose.position.x = odometry_.getX();
+      odometry_message.pose.pose.position.y = odometry_.getY();
+      odometry_message.pose.pose.orientation.x = orientation.x();
+      odometry_message.pose.pose.orientation.y = orientation.y();
+      odometry_message.pose.pose.orientation.z = orientation.z();
+      odometry_message.pose.pose.orientation.w = orientation.w();
+      odometry_message.twist.twist.linear.x = odometry_.getLinearX();
+      odometry_message.twist.twist.linear.y = odometry_.getLinearY();
+      odometry_message.twist.twist.angular.z = odometry_.getAngular();
+      realtime_odometry_publisher_->unlockAndPublish();
+    }
+
+    if (params_.enable_odom_tf && realtime_odometry_transform_publisher_->trylock()) {
+      auto & transform = realtime_odometry_transform_publisher_->msg_.transforms.front();
+      transform.header.stamp = time;
+      transform.transform.translation.x = odometry_.getX();
+      transform.transform.translation.y = odometry_.getY();
+      transform.transform.rotation.x = orientation.x();
+      transform.transform.rotation.y = orientation.y();
+      transform.transform.rotation.z = orientation.z();
+      transform.transform.rotation.w = orientation.w();
+      realtime_odometry_transform_publisher_->unlockAndPublish();
+    }
+  }
+
+  double & last_linear_x = previous_two_commands_.back()[0];
+  double & second_to_last_linear_x = previous_two_commands_.front()[0];
+  double & last_linear_y = previous_two_commands_.back()[1];
+  double & second_to_last_linear_y = previous_two_commands_.front()[1];
+  double & last_angular = previous_two_commands_.back()[2];
+  double & second_to_last_angular = previous_two_commands_.front()[2];
+
+  limiter_linear_x_->limit(
+    linear_command_x, last_linear_x, second_to_last_linear_x, period.seconds());
+  limiter_linear_y_->limit(
+    linear_command_y, last_linear_y, second_to_last_linear_y, period.seconds());
+  limiter_angular_->limit(angular_command, last_angular, second_to_last_angular, period.seconds());
+
+  previous_two_commands_.pop();
+  previous_two_commands_.push({linear_command_x, linear_command_y, angular_command});
+
+  //    Publish limited velocity
+  if (publish_limited_velocity_ && realtime_limited_velocity_publisher_->trylock()) {
+    auto & limited_velocity_command = realtime_limited_velocity_publisher_->msg_;
+    limited_velocity_command.header.stamp = time;
+    limited_velocity_command.twist.linear.x = linear_command_x;
+    limited_velocity_command.twist.linear.y = linear_command_y;
+    limited_velocity_command.twist.linear.z = 0.0;
+    limited_velocity_command.twist.angular.x = 0.0;
+    limited_velocity_command.twist.angular.y = 0.0;
+    limited_velocity_command.twist.angular.z = angular_command;
+    realtime_limited_velocity_publisher_->unlockAndPublish();
+  }
+
+  // Compute wheels velocities:
+  const double velocity_front_left =
+    (linear_command_x - linear_command_y -
+     (wheel_separation_x + wheel_separation_y) / 2. * angular_command) /
+    wheel_radius;
+
+  const double velocity_front_right =
+    (linear_command_x + linear_command_y +
+     (wheel_separation_x + wheel_separation_y) / 2. * angular_command) /
+    wheel_radius;
+
+  const double velocity_rear_left =
+    (linear_command_x + linear_command_y -
+     (wheel_separation_x + wheel_separation_y) / 2. * angular_command) /
+    wheel_radius;
+
+  const double velocity_rear_right =
+    (linear_command_x - linear_command_y +
+     (wheel_separation_x + wheel_separation_y) / 2. * angular_command) /
+    wheel_radius;
+
+  // Set wheels velocities:
+  const bool value_set_error =
+    registered_front_left_wheel_handle_->velocity.get().set_value(velocity_front_left) &&
+    registered_front_right_wheel_handle_->velocity.get().set_value(velocity_front_right) &&
+    registered_rear_left_wheel_handle_->velocity.get().set_value(velocity_rear_left) &&
+    registered_rear_right_wheel_handle_->velocity.get().set_value(velocity_rear_right);
+
+  RCLCPP_ERROR_EXPRESSION(
+    get_node()->get_logger(), !value_set_error,
+    "Setting values to command interfaces has failed! "
+    "This means that you are maybe blocking the interface in your hardware for too long.");
+
+  return controller_interface::return_type::OK;
+}
+
+controller_interface::CallbackReturn MecanumDriveController::on_configure(
+  const rclcpp_lifecycle::State &)
+{
+  auto logger = get_node()->get_logger();
+
+  // update parameters if they have changed
+  if (param_listener_->is_old(params_)) {
+    params_ = param_listener_->get_params();
+    RCLCPP_INFO(logger, "Parameters were updated");
+  }
+
+  // Allocate reference interfaces if needed
+  const int nr_ref_itfs = 3;
+  reference_interfaces_.resize(nr_ref_itfs, std::numeric_limits<double>::quiet_NaN());
+
+  std::string tf_prefix;
+  if (params_.tf_frame_prefix_enable) {
+    if (params_.tf_frame_prefix != "") {
+      tf_prefix = params_.tf_frame_prefix;
+    } else {
+      tf_prefix = std::string(get_node()->get_namespace());
+    }
+
+    // Make sure prefix does not start with '/' and always ends with '/'
+    if (tf_prefix.back() != '/') {
+      tf_prefix = tf_prefix + "/";
+    }
+    if (tf_prefix.front() == '/') {
+      tf_prefix.erase(0, 1);
+    }
+  }
+
+  front_left_wheel_name_ = params_.front_left_wheel_name;
+  front_right_wheel_name_ = params_.front_right_wheel_name;
+  rear_left_wheel_name_ = params_.rear_left_wheel_name;
+  rear_right_wheel_name_ = params_.rear_right_wheel_name;
+
+  if (
+    front_left_wheel_name_.empty() || front_right_wheel_name_.empty() ||
+    rear_left_wheel_name_.empty() || rear_right_wheel_name_.empty()) {
+    RCLCPP_ERROR(logger, "Wheel name parameter is empty!");
+    return controller_interface::CallbackReturn::ERROR;
+  }
+
+  front_left_wheel_name_ = front_left_wheel_name_;
+  front_right_wheel_name_ = front_right_wheel_name_;
+  rear_left_wheel_name_ = rear_left_wheel_name_;
+  rear_right_wheel_name_ = rear_right_wheel_name_;
+  params_.odom_frame_id = tf_prefix + params_.odom_frame_id;
+  params_.base_frame_id = tf_prefix + params_.base_frame_id;
+
+  const double wheel_separation_x = params_.wheel_separation_y_multiplier *
+                                    params_.wheel_separation_x;
+  const double wheel_separation_y = params_.wheel_separation_x_multiplier *
+                                    params_.wheel_separation_y;
+  const double wheel_radius = params_.wheel_radius_multiplier * params_.wheel_radius;
+
+  odometry_.setWheelParams(wheel_separation_x, wheel_separation_y, wheel_radius);
+  odometry_.setVelocityRollingWindowSize(params_.velocity_rolling_window_size);
+
+  auto pose_diagonal = params_.pose_covariance_diagonal;
+  std::copy(pose_diagonal.begin(), pose_diagonal.end(), params_.pose_covariance_diagonal.begin());
+
+  auto twist_diagonal = params_.twist_covariance_diagonal;
+  std::copy(
+    twist_diagonal.begin(), twist_diagonal.end(), params_.twist_covariance_diagonal.begin());
+
+  params_.open_loop = params_.open_loop;
+  params_.position_feedback = params_.position_feedback;
+  params_.enable_odom_tf = params_.enable_odom_tf;
+
+  cmd_vel_timeout_ = rclcpp::Duration::from_seconds(params_.cmd_vel_timeout);
+  publish_limited_velocity_ = params_.publish_limited_velocity;
+
+  // START DEPRECATED
+  if (!params_.linear.x.has_velocity_limits) {
+    RCLCPP_WARN(
+      logger,
+      "[deprecated] has_velocity_limits parameter is deprecated, instead set the respective limits "
+      "to NAN");
+    params_.linear.x.min_velocity = params_.linear.x.max_velocity =
+      std::numeric_limits<double>::quiet_NaN();
+  }
+  if (!params_.linear.x.has_acceleration_limits) {
+    RCLCPP_WARN(
+      logger,
+      "[deprecated] has_acceleration_limits parameter is deprecated, instead set the respective "
+      "limits to "
+      "NAN");
+    params_.linear.x.max_deceleration = params_.linear.x.max_acceleration =
+      params_.linear.x.max_deceleration_reverse = params_.linear.x.max_acceleration_reverse =
+        std::numeric_limits<double>::quiet_NaN();
+  }
+  if (!params_.linear.x.has_jerk_limits) {
+    RCLCPP_WARN(
+      logger,
+      "[deprecated] has_jerk_limits parameter is deprecated, instead set the respective limits to "
+      "NAN");
+    params_.linear.x.min_jerk = params_.linear.x.max_jerk =
+      std::numeric_limits<double>::quiet_NaN();
+  }
+  if (!params_.angular.z.has_velocity_limits) {
+    RCLCPP_WARN(
+      logger,
+      "[deprecated] has_velocity_limits parameter is deprecated, instead set the respective limits "
+      "to NAN");
+    params_.angular.z.min_velocity = params_.angular.z.max_velocity =
+      std::numeric_limits<double>::quiet_NaN();
+  }
+  if (!params_.angular.z.has_acceleration_limits) {
+    RCLCPP_WARN(
+      logger,
+      "[deprecated] has_acceleration_limits parameter is deprecated, instead set the respective "
+      "limits to "
+      "NAN");
+    params_.angular.z.max_deceleration = params_.angular.z.max_acceleration =
+      params_.angular.z.max_deceleration_reverse = params_.angular.z.max_acceleration_reverse =
+        std::numeric_limits<double>::quiet_NaN();
+  }
+  if (!params_.angular.z.has_jerk_limits) {
+    RCLCPP_WARN(
+      logger,
+      "[deprecated] has_jerk_limits parameter is deprecated, instead set the respective limits to "
+      "NAN");
+    params_.angular.z.min_jerk = params_.angular.z.max_jerk =
+      std::numeric_limits<double>::quiet_NaN();
+  }
+  try {
+    limiter_linear_x_ = std::make_unique<SpeedLimiter>(
+      params_.linear.x.min_velocity, params_.linear.x.max_velocity,
+      params_.linear.x.max_acceleration_reverse, params_.linear.x.max_acceleration,
+      params_.linear.x.max_deceleration, params_.linear.x.max_deceleration_reverse,
+      params_.linear.x.min_jerk, params_.linear.x.max_jerk);
+  } catch (const std::runtime_error & e) {
+    RCLCPP_ERROR(
+      get_node()->get_logger(), "Error configuring x linear speed limiter: %s", e.what());
+  }
+
+  try {
+    limiter_linear_y_ = std::make_unique<SpeedLimiter>(
+      params_.linear.y.min_velocity, params_.linear.y.max_velocity,
+      params_.linear.y.max_acceleration_reverse, params_.linear.y.max_acceleration,
+      params_.linear.y.max_deceleration, params_.linear.y.max_deceleration_reverse,
+      params_.linear.y.min_jerk, params_.linear.y.max_jerk);
+  } catch (const std::runtime_error & e) {
+    RCLCPP_ERROR(
+      get_node()->get_logger(), "Error configuring y linear speed limiter: %s", e.what());
+  }
+
+  try {
+    limiter_angular_ = std::make_unique<SpeedLimiter>(
+      params_.angular.z.min_velocity, params_.angular.z.max_velocity,
+      params_.angular.z.max_acceleration_reverse, params_.angular.z.max_acceleration,
+      params_.angular.z.max_deceleration, params_.angular.z.max_deceleration_reverse,
+      params_.angular.z.min_jerk, params_.angular.z.max_jerk);
+  } catch (const std::runtime_error & e) {
+    RCLCPP_ERROR(get_node()->get_logger(), "Error configuring angular speed limiter: %s", e.what());
+  }
+
+  if (!reset()) {
+    return controller_interface::CallbackReturn::ERROR;
+  }
+
+  if (publish_limited_velocity_) {
+    limited_velocity_publisher_ = get_node()->create_publisher<TwistStamped>(
+      DEFAULT_COMMAND_OUT_TOPIC, rclcpp::SystemDefaultsQoS());
+    realtime_limited_velocity_publisher_ =
+      std::make_shared<realtime_tools::RealtimePublisher<TwistStamped>>(
+        limited_velocity_publisher_);
+  }
+
+  const TwistStamped empty_twist;
+  received_velocity_msg_ptr_.writeFromNonRT(std::make_shared<TwistStamped>(empty_twist));
+
+  // Fill last two commands with default constructed commands
+  previous_two_commands_.push({0.0, 0.0, 0.0});
+  previous_two_commands_.push({0.0, 0.0, 0.0});
+
+  velocity_command_subscriber_ = get_node()->create_subscription<TwistStamped>(
+    DEFAULT_COMMAND_TOPIC, rclcpp::SystemDefaultsQoS(),
+    [this](const std::shared_ptr<TwistStamped> msg) -> void {
+      if (!subscriber_is_active_) {
+        RCLCPP_WARN(get_node()->get_logger(), "Can't accept new commands. subscriber is inactive");
+        return;
+      }
+      if ((msg->header.stamp.sec == 0) && (msg->header.stamp.nanosec == 0)) {
+        RCLCPP_WARN_ONCE(
+          get_node()->get_logger(),
+          "Received TwistStamped with zero timestamp, setting it to current "
+          "time, this message will only be shown once");
+        msg->header.stamp = get_node()->get_clock()->now();
+      }
+      received_velocity_msg_ptr_.writeFromNonRT(std::move(msg));
+    });
+
+  // initialize odometry publisher and message
+  odometry_publisher_ = get_node()->create_publisher<nav_msgs::msg::Odometry>(
+    DEFAULT_ODOMETRY_TOPIC, rclcpp::SystemDefaultsQoS());
+  realtime_odometry_publisher_ =
+    std::make_shared<realtime_tools::RealtimePublisher<nav_msgs::msg::Odometry>>(
+      odometry_publisher_);
+
+  auto & odometry_message = realtime_odometry_publisher_->msg_;
+  odometry_message.header.frame_id = params_.odom_frame_id;
+  odometry_message.child_frame_id = params_.base_frame_id;
+
+  // limit the publication on the topics /odom and /tf
+  publish_rate_ = params_.publish_rate;
+  publish_period_ = rclcpp::Duration::from_seconds(1.0 / publish_rate_);
+
+  // initialize odom values zeros
+  odometry_message.twist =
+    geometry_msgs::msg::TwistWithCovariance(rosidl_runtime_cpp::MessageInitialization::ALL);
+
+  constexpr size_t NUM_DIMENSIONS = 6;
+  for (size_t index = 0; index < 6; ++index) {
+    // 0, 7, 14, 21, 28, 35
+    const size_t diagonal_index = NUM_DIMENSIONS * index + index;
+    odometry_message.pose.covariance[diagonal_index] = params_.pose_covariance_diagonal[index];
+    odometry_message.twist.covariance[diagonal_index] = params_.twist_covariance_diagonal[index];
+  }
+
+  // initialize transform publisher and message
+  odometry_transform_publisher_ = get_node()->create_publisher<tf2_msgs::msg::TFMessage>(
+    DEFAULT_TRANSFORM_TOPIC, rclcpp::SystemDefaultsQoS());
+  realtime_odometry_transform_publisher_ =
+    std::make_shared<realtime_tools::RealtimePublisher<tf2_msgs::msg::TFMessage>>(
+      odometry_transform_publisher_);
+
+  // keeping track of odom and base_link transforms only
+  auto & odometry_transform_message = realtime_odometry_transform_publisher_->msg_;
+  odometry_transform_message.transforms.resize(1);
+  odometry_transform_message.transforms.front().header.frame_id = params_.odom_frame_id;
+  odometry_transform_message.transforms.front().child_frame_id = params_.base_frame_id;
+
+  previous_update_timestamp_ = get_node()->get_clock()->now();
+  return controller_interface::CallbackReturn::SUCCESS;
+}
+
+controller_interface::CallbackReturn MecanumDriveController::on_activate(
+  const rclcpp_lifecycle::State &)
+{
+  const auto front_left_result = configure_wheel(
+    front_left_wheel_name_, registered_front_left_wheel_handle_);
+  const auto front_right_result = configure_wheel(
+    front_right_wheel_name_, registered_front_right_wheel_handle_);
+  const auto rear_left_result = configure_wheel(
+    rear_left_wheel_name_, registered_rear_left_wheel_handle_);
+  const auto rear_right_result = configure_wheel(
+    rear_right_wheel_name_, registered_rear_right_wheel_handle_);
+
+  if (
+    front_left_result == controller_interface::CallbackReturn::ERROR ||
+    front_right_result == controller_interface::CallbackReturn::ERROR ||
+    rear_left_result == controller_interface::CallbackReturn::ERROR ||
+    rear_right_result == controller_interface::CallbackReturn::ERROR) {
+    return controller_interface::CallbackReturn::ERROR;
+  }
+
+  if (!(registered_front_left_wheel_handle_ && registered_front_right_wheel_handle_ &&
+        registered_rear_left_wheel_handle_ && registered_rear_right_wheel_handle_)) {
+    RCLCPP_ERROR(get_node()->get_logger(), "One of wheel interfaces is non existent");
+    return controller_interface::CallbackReturn::ERROR;
+  }
+
+  is_halted = false;
+  subscriber_is_active_ = true;
+
+  RCLCPP_DEBUG(get_node()->get_logger(), "Subscriber and publisher are now active.");
+  return controller_interface::CallbackReturn::SUCCESS;
+}
+
+controller_interface::CallbackReturn MecanumDriveController::on_deactivate(
+  const rclcpp_lifecycle::State &)
+{
+  subscriber_is_active_ = false;
+  return controller_interface::CallbackReturn::SUCCESS;
+}
+
+controller_interface::CallbackReturn MecanumDriveController::on_cleanup(
+  const rclcpp_lifecycle::State &)
+{
+  if (!reset()) {
+    return controller_interface::CallbackReturn::ERROR;
+  }
+
+  received_velocity_msg_ptr_.writeFromNonRT(std::make_shared<TwistStamped>());
+  return controller_interface::CallbackReturn::SUCCESS;
+}
+
+controller_interface::CallbackReturn MecanumDriveController::on_error(
+  const rclcpp_lifecycle::State &)
+{
+  if (!reset()) {
+    return controller_interface::CallbackReturn::ERROR;
+  }
+  return controller_interface::CallbackReturn::SUCCESS;
+}
+
+bool MecanumDriveController::reset()
+{
+  odometry_.resetOdometry();
+
+  reset_buffers();
+
+  registered_front_left_wheel_handle_.reset();
+  registered_front_right_wheel_handle_.reset();
+  registered_rear_left_wheel_handle_.reset();
+  registered_rear_right_wheel_handle_.reset();
+
+  subscriber_is_active_ = false;
+  velocity_command_subscriber_.reset();
+
+  is_halted = false;
+  return true;
+}
+
+void MecanumDriveController::reset_buffers()
+{
+  // Empty out the old queue.
+  std::queue<std::array<double, 3>> empty;
+  std::swap(previous_two_commands_, empty);
+
+  // Fill RealtimeBuffer with NaNs so it will contain a known value
+  // but still indicate that no command has yet been sent.
+  received_velocity_msg_ptr_.reset();
+  std::shared_ptr<TwistStamped> empty_msg_ptr = std::make_shared<TwistStamped>();
+  empty_msg_ptr->header.stamp = get_node()->now();
+  empty_msg_ptr->twist.linear.x = std::numeric_limits<double>::quiet_NaN();
+  empty_msg_ptr->twist.linear.y = std::numeric_limits<double>::quiet_NaN();
+  empty_msg_ptr->twist.linear.z = std::numeric_limits<double>::quiet_NaN();
+  empty_msg_ptr->twist.angular.x = std::numeric_limits<double>::quiet_NaN();
+  empty_msg_ptr->twist.angular.y = std::numeric_limits<double>::quiet_NaN();
+  empty_msg_ptr->twist.angular.z = std::numeric_limits<double>::quiet_NaN();
+  received_velocity_msg_ptr_.writeFromNonRT(empty_msg_ptr);
+}
+
+void MecanumDriveController::halt()
+{
+  const bool value_set_error =
+    registered_front_left_wheel_handle_->velocity.get().set_value(0.0) &&
+    registered_front_right_wheel_handle_->velocity.get().set_value(0.0) &&
+    registered_rear_left_wheel_handle_->velocity.get().set_value(0.0) &&
+    registered_rear_right_wheel_handle_->velocity.get().set_value(0.0);
+
+  RCLCPP_ERROR_EXPRESSION(
+    get_node()->get_logger(), !value_set_error,
+    "Setting values to command interfaces has failed! "
+    "This means that you are maybe blocking the interface in your hardware for too long.");
+}
+
+controller_interface::CallbackReturn MecanumDriveController::configure_wheel(
+  const std::string & wheel_name, std::unique_ptr<WheelHandle> & registered_handle)
+{
+  auto logger = get_node()->get_logger();
+
+  if (wheel_name.empty()) {
+    RCLCPP_ERROR(logger, "No wheel name specified");
+    return controller_interface::CallbackReturn::ERROR;
+  }
+
+  // register handles
+  const auto interface_name = feedback_type();
+  const auto state_handle = std::find_if(
+    state_interfaces_.cbegin(), state_interfaces_.cend(),
+    [&wheel_name, &interface_name](const auto & interface) {
+      return interface.get_prefix_name() == wheel_name &&
+             interface.get_interface_name() == interface_name;
+    });
+
+  if (state_handle == state_interfaces_.cend()) {
+    RCLCPP_ERROR(logger, "Unable to obtain joint state handle for %s", wheel_name.c_str());
+    return controller_interface::CallbackReturn::ERROR;
+  }
+
+  const auto command_handle = std::find_if(
+    command_interfaces_.begin(), command_interfaces_.end(), [&wheel_name](const auto & interface) {
+      return interface.get_prefix_name() == wheel_name &&
+             interface.get_interface_name() == HW_IF_VELOCITY;
+    });
+
+  if (command_handle == command_interfaces_.end()) {
+    RCLCPP_ERROR(logger, "Unable to obtain joint command handle for %s", wheel_name.c_str());
+    return controller_interface::CallbackReturn::ERROR;
+  }
+
+  registered_handle =
+    std::make_unique<WheelHandle>(WheelHandle{std::ref(*state_handle), std::ref(*command_handle)});
+
+  return controller_interface::CallbackReturn::SUCCESS;
+}
+
+std::vector<hardware_interface::CommandInterface>
+MecanumDriveController::on_export_reference_interfaces()
+{
+  std::vector<hardware_interface::CommandInterface> reference_interfaces;
+  reference_interfaces.reserve(reference_interfaces_.size());
+
+  reference_interfaces.push_back(hardware_interface::CommandInterface(
+    get_node()->get_name() + std::string("/linear/x"), hardware_interface::HW_IF_VELOCITY,
+    &reference_interfaces_[0]));
+
+  reference_interfaces.push_back(hardware_interface::CommandInterface(
+    get_node()->get_name() + std::string("/linear/y"), hardware_interface::HW_IF_VELOCITY,
+    &reference_interfaces_[1]));
+
+  reference_interfaces.push_back(hardware_interface::CommandInterface(
+    get_node()->get_name() + std::string("/angular/z"), hardware_interface::HW_IF_VELOCITY,
+    &reference_interfaces_[2]));
+
+  return reference_interfaces;
+}
+
+}  // namespace husarion_mecanum_drive_controller
+
+#include "class_loader/register_macro.hpp"
+
+CLASS_LOADER_REGISTER_CLASS(
+  husarion_mecanum_drive_controller::MecanumDriveController,
+  controller_interface::ChainableControllerInterface)

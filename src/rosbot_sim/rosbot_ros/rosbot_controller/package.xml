@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>rosbot_controller</name>
+  <version>0.18.8</version>
+  <description>Hardware configuration for ROSbot Series</description>
+  <maintainer email="support@husarion.com">Husarion</maintainer>
+  <license>Apache License 2.0</license>
+
+  <url type="website">https://husarion.com/</url>
+  <url type="repository">https://github.com/husarion/rosbot_ros</url>
+  <url type="bugtracker">https://github.com/husarion/rosbot_ros/issues</url>
+
+  <author email="jakub.delicat@husarion.com">Jakub Delicat</author>
+  <author email="rafal.gorecki@husarion.com">Rafał Gorecki</author>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <exec_depend>controller_manager</exec_depend>
+  <exec_depend>diff_drive_controller</exec_depend>
+  <exec_depend>husarion_mecanum_drive_controller</exec_depend>
+  <exec_depend>imu_sensor_broadcaster</exec_depend>
+  <exec_depend>joint_state_broadcaster</exec_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>nav2_common</exec_depend>
+  <exec_depend>position_controllers</exec_depend>
+  <exec_depend>ros2controlcli</exec_depend>
+  <exec_depend>rosbot_description</exec_depend>
+  <exec_depend>rosbot_hardware_interfaces</exec_depend>
+  <exec_depend>rosbot_moveit</exec_depend>
+  <exec_depend>rosbot_utils</exec_depend>
+  <exec_depend>udev</exec_depend>
+  <exec_depend>xacro</exec_depend>
+  <!-- <exec_depend>parallel_gripper_controller</exec_depend> TODO: Should be used but right now no all function available (move_group)-->
+
+  <test_depend>ament_cmake_pytest</test_depend>
+  <test_depend>python3-pytest</test_depend>
+  <test_depend>rosbot_description</test_depend>
+  <test_depend>xacro</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
