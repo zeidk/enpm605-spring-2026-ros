@@ -2,7 +2,7 @@
 <package format="3">
   <name>message_demo</name>
   <version>0.0.1</version>
-  <description>Demo package for custom message usage</description>
+  <description>Custom message demo: publishing and subscribing with user-defined message types.</description>
   <maintainer email="zeidk@umd.edu">Z. Kootbally</maintainer>
   <license>Apache-2.0</license>
 

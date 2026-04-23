@@ -64,3 +64,6 @@ demo.tex
 *.pdf
 *.gv
 result.txt
+*.tex
+final_project_solution/
+final_project_solution_meta/

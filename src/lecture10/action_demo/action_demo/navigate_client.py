@@ -37,6 +37,7 @@ class NavigateClient(Node):
         self._cancel_and_resend = (
             self.get_parameter("cancel_and_resend").get_parameter_value().bool_value
         )
+        
 
         # Send a hardcoded goal
         self.send_goal(5.0, 3.0, 1.0)

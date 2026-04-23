@@ -15,7 +15,7 @@ setup(
     zip_safe=True,
     maintainer='zeid',
     maintainer_email='zeidk@umd.edu',
-    description='Demonstrate simple nodes, publishers, and subscribers',
+    description='Introduction to ROS 2: simple nodes, publishers, subscribers, and timers.',
     license='Apache-2.0',
     extras_require={
         'test': [

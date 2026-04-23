@@ -3,7 +3,7 @@
 <package format="3">
   <name>first_pkg</name>
   <version>0.0.0</version>
-  <description>Demonstrate simple nodes, publishers, and subscribers</description>
+  <description>Introduction to ROS 2: simple nodes, publishers, subscribers, and timers.</description>
   <maintainer email="zeidk@umd.edu">zeid</maintainer>
   <license>Apache-2.0</license>
 

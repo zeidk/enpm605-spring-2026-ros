@@ -20,7 +20,7 @@ setup(
     zip_safe=True,
     maintainer="Z. Kootbally",
     maintainer_email="zeidk@umd.edu",
-    description="Demo package for ROS 2 namespaces",
+    description="Namespace demo: isolating multiple camera node instances using CLI and launch file namespaces.",
     license="Apache-2.0",
     entry_points={
         "console_scripts": [

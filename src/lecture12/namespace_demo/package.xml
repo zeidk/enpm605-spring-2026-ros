@@ -2,7 +2,7 @@
 <package format="3">
   <name>namespace_demo</name>
   <version>0.0.1</version>
-  <description>Demo package for ROS 2 namespaces</description>
+  <description>Namespace demo: isolating multiple camera node instances using CLI and launch file namespaces.</description>
   <maintainer email="zeidk@umd.edu">Z. Kootbally</maintainer>
   <license>Apache-2.0</license>
 

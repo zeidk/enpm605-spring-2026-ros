@@ -15,7 +15,7 @@ setup(
     zip_safe=True,
     maintainer='zeid',
     maintainer_email='zeidk@umd.edu',
-    description='Demonstrate ROS 2 services with custom interfaces',
+    description='Service demo: synchronous and asynchronous service clients with custom request/response interfaces.',
     license='Apache-2.0',
     extras_require={
         'test': [

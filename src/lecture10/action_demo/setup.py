@@ -15,7 +15,7 @@ setup(
     zip_safe=True,
     maintainer='zeid',
     maintainer_email='zeidk@umd.edu',
-    description='Demonstrate ROS 2 actions with custom interfaces',
+    description='Action demo: action server with execute/cancel callbacks, action client with feedback and result handling.',
     license='Apache-2.0',
     extras_require={
         'test': [

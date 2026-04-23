@@ -3,7 +3,7 @@
 <package format="3">
   <name>parameters_demo</name>
   <version>0.0.0</version>
-  <description>Demonstrate ROS 2 parameter declaration, retrieval, and dynamic updates</description>
+  <description>Parameter demo: declaration, retrieval, YAML loading, runtime callbacks, and launch argument forwarding.</description>
   <maintainer email="zeidk@umd.edu">zeid</maintainer>
   <license>Apache-2.0</license>
 

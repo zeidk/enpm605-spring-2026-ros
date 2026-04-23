@@ -1,8 +1,0 @@
-<!-- Copied and adapted from diff_drive_controller (https://github.com/ros-controls/ros2_controllers) -->
-<library path="husarion_mecanum_drive_controller">
-  <class name="husarion_mecanum_drive_controller/MecanumDriveController" type="husarion_mecanum_drive_controller::MecanumDriveController" base_class_type="controller_interface::ChainableControllerInterface">
-  <description>
-    The mecanum drive controller transforms linear and angular velocity messages into signals for each wheel(s) for a mecanum drive robot.
-  </description>
-  </class>
-</library>

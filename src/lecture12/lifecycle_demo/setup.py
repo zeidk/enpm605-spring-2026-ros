@@ -14,7 +14,7 @@ setup(
     zip_safe=True,
     maintainer="Z. Kootbally",
     maintainer_email="zeidk@umd.edu",
-    description="Demo package for ROS 2 lifecycle nodes",
+    description="Lifecycle node demos: manual CLI-driven state transitions and programmatic self-cycling with the change_state service.",
     license="Apache-2.0",
     entry_points={
         "console_scripts": [

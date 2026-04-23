@@ -2,7 +2,7 @@
 <package format="3">
   <name>bt_demo</name>
   <version>0.0.1</version>
-  <description>Demo package for behavior trees with py_trees and py_trees_ros</description>
+  <description>Behavior tree demo using py_trees and py_trees_ros: drive-to-goal with P-control and Timeout/Spin recovery.</description>
   <maintainer email="zeidk@umd.edu">Z. Kootbally</maintainer>
   <license>Apache-2.0</license>
 

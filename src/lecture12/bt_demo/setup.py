@@ -18,7 +18,7 @@ setup(
     zip_safe=True,
     maintainer="Z. Kootbally",
     maintainer_email="zeidk@umd.edu",
-    description="Demo package for behavior trees with py_trees and py_trees_ros",
+    description="Behavior tree demo using py_trees and py_trees_ros: drive-to-goal with P-control and Timeout/Spin recovery.",
     license="Apache-2.0",
     entry_points={
         "console_scripts": [

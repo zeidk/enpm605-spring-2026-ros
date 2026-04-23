@@ -14,7 +14,7 @@ setup(
     zip_safe=True,
     maintainer="Z. Kootbally",
     maintainer_email="zeidk@umd.edu",
-    description="Demo package for custom message usage",
+    description="Custom message demo: publishing and subscribing with user-defined message types.",
     license="Apache-2.0",
     entry_points={
         "console_scripts": [

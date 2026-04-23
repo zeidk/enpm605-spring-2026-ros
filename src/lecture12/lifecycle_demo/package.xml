@@ -2,7 +2,7 @@
 <package format="3">
   <name>lifecycle_demo</name>
   <version>0.0.1</version>
-  <description>Demo package for ROS 2 lifecycle nodes</description>
+  <description>Lifecycle node demos: manual CLI-driven state transitions and programmatic self-cycling with the change_state service.</description>
   <maintainer email="zeidk@umd.edu">Z. Kootbally</maintainer>
   <license>Apache-2.0</license>
 

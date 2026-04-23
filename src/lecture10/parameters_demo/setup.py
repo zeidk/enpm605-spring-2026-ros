@@ -21,7 +21,7 @@ setup(
     zip_safe=True,
     maintainer='zeid',
     maintainer_email='zeidk@umd.edu',
-    description='Demonstrate ROS 2 parameter declaration, retrieval, and dynamic updates',
+    description='Parameter demo: declaration, retrieval, YAML loading, runtime callbacks, and launch argument forwarding.',
     license='Apache-2.0',
     extras_require={
         'test': [

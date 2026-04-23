@@ -2,7 +2,7 @@
 <package format="3">
   <name>remapping_demo</name>
   <version>0.0.1</version>
-  <description>Demo package for ROS 2 remapping</description>
+  <description>Remapping demo: node name, topic, and parameter remapping via CLI and launch files.</description>
   <maintainer email="zeidk@umd.edu">Z. Kootbally</maintainer>
   <license>Apache-2.0</license>
 
