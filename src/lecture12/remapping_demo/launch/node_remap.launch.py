@@ -5,13 +5,13 @@ from launch_ros.actions import Node
 def generate_launch_description():
     front_camera = Node(
         package="remapping_demo",
-        executable="camera_demo",
+        executable="camera_demo_exe",
         name="front_camera",
         output="screen",
     )
     rear_camera = Node(
         package="remapping_demo",
-        executable="camera_demo",
+        executable="camera_demo_exe",
         name="rear_camera",
         output="screen",
     )

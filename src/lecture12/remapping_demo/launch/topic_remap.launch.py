@@ -5,7 +5,7 @@ from launch_ros.actions import Node
 def generate_launch_description():
     front_camera = Node(
         package="remapping_demo",
-        executable="camera_demo",
+        executable="camera_demo_exe",
         name="front_camera",
         remappings=[
             ("image_raw", "/sensors/front/image"),
@@ -14,7 +14,7 @@ def generate_launch_description():
     )
     rear_camera = Node(
         package="remapping_demo",
-        executable="camera_demo",
+        executable="camera_demo_exe",
         name="rear_camera",
         remappings=[
             ("image_raw", "/sensors/rear/image"),
@@ -23,7 +23,7 @@ def generate_launch_description():
     )
     front_image_processor = Node(
         package="remapping_demo",
-        executable="image_processor",
+        executable="image_processor_exe",
         name="front_camera_processor",
         remappings=[
             ("camera/image", "/sensors/front/image"),
@@ -32,7 +32,7 @@ def generate_launch_description():
     )
     rear_image_processor = Node(
         package="remapping_demo",
-        executable="image_processor",
+        executable="image_processor_exe",
         name="rear_camera_processor",
         remappings=[
             ("camera/image", "/sensors/rear/image"),
