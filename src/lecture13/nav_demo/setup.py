@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 import os
 from glob import glob
 
-package_name = 'mapping_navigation_demo'
+package_name = 'nav_demo'
 
 setup(
     name=package_name,
@@ -30,7 +30,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            "navigation_node_exe = mapping_navigation_demo.scripts.main_navigation_demo:main",
+            "navigation_node_exe = nav_demo.scripts.main_navigation_demo:main",
         ],
     },
 )

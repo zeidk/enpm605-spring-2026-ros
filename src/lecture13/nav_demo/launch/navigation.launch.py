@@ -26,7 +26,7 @@ def generate_launch_description():
     # Resolve map path at Python load time so it passes cleanly into
     # nav2_bringup's localization_launch.py (PathJoinSubstitution defaults
     # don't propagate reliably through IncludeLaunchDescription).
-    pkg_share = get_package_share_directory("mapping_navigation_demo")
+    pkg_share = get_package_share_directory("nav_demo")
     default_map_path = os.path.join(pkg_share, "maps", "my_map.yaml")
 
     map_file_arg = DeclareLaunchArgument(
@@ -42,7 +42,7 @@ def generate_launch_description():
 
     # Parameter files
     nav2_params_path = PathJoinSubstitution(
-        [FindPackageShare("mapping_navigation_demo"), "config", "nav2_params.yaml"]
+        [FindPackageShare("nav_demo"), "config", "nav2_params.yaml"]
     )
 
     # 1. Nav2 Localization - AMCL publishes the map->odom transform itself
@@ -81,7 +81,7 @@ def generate_launch_description():
     
     # 4. RViz with navigation configuration
     rviz_config_path = PathJoinSubstitution(
-        [FindPackageShare("mapping_navigation_demo"), "rviz", "nav2.rviz"]
+        [FindPackageShare("nav_demo"), "rviz", "nav2.rviz"]
     )
     
     rviz_node = Node(
@@ -110,7 +110,7 @@ def generate_launch_description():
 
     # Navigation demo node (only launched if run_nav_node:=true)
     navigation_demo_node = Node(
-        package="mapping_navigation_demo",
+        package="nav_demo",
         executable="navigation_node_exe",
         name="navigation_node",
         output="screen",

@@ -19,44 +19,22 @@ def generate_launch_description():
         default_value='true',
         description='Use simulation time'
     )
-    
-    enable_rosbot_gazebo_arg = DeclareLaunchArgument(
-        "enable_rosbot_gazebo",
-        default_value="true",
-        description="Enable the ROSbot Gazebo simulation",
-    )
 
     # Parameter files
     default_slam_params_path = PathJoinSubstitution(
         [
-            FindPackageShare("mapping_navigation_demo"),
+            FindPackageShare("nav_demo"),
             "config",
             "mapper_params_online_async.yaml",
         ]
     )
 
     nav2_file_path = PathJoinSubstitution(
-        [FindPackageShare("mapping_navigation_demo"), "config", "nav2_params.yaml"]
+        [FindPackageShare("nav_demo"), "config", "nav2_params.yaml"]
     )
 
-    # 1. ROSbot Gazebo simulation launch - changing to IncludeLaunchDescription
-    rosbot_gazebo_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource([
-            PathJoinSubstitution([
-                FindPackageShare('rosbot_gazebo'),
-                'launch',
-                'simulation.launch.py'
-            ])
-        ]),
-        launch_arguments={
-            'start_rviz': 'false',  # Let's manage RViz separately for better control
-            'y': '2.0',
-            'use_sim_time': LaunchConfiguration('use_sim_time')
-        }.items(),
-        condition=IfCondition(LaunchConfiguration("enable_rosbot_gazebo")),
-    )
 
-    # 2. SLAM Toolbox launch - before Nav2
+    # 1. SLAM Toolbox launch - before Nav2
     slam_toolbox_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             [
@@ -75,7 +53,7 @@ def generate_launch_description():
         }.items()
     )
     
-    # 3. Nav2 launch - REMOVED map parameter for SLAM mode
+    # 2. Nav2 launch - REMOVED map parameter for SLAM mode
     nav2_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             [
@@ -112,7 +90,7 @@ def generate_launch_description():
     
     # 5. Your navigation demo node
     navigation_demo_node = Node(
-        package='mapping_navigation_demo',
+        package='nav_demo',
         executable='navigation_node',
         name='navigation_node',
         parameters=[{'use_sim_time': LaunchConfiguration('use_sim_time')}],

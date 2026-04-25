@@ -1,7 +1,7 @@
 """Entry point for the navigation demo node."""
 
 import rclpy
-from mapping_navigation_demo.navigation_demo_interface import NavigationDemoInterface
+from nav_demo.navigation_demo_interface import NavigationDemoInterface
 
 
 def main(args=None):

@@ -18,7 +18,7 @@ def generate_launch_description():
 
     default_slam_params_path = PathJoinSubstitution(
         [
-            FindPackageShare("mapping_navigation_demo"),
+            FindPackageShare("nav_demo"),
             "config",
             "mapper_params_online_async.yaml",
         ]

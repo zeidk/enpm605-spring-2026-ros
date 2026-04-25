@@ -31,6 +31,10 @@ class NavigationDemoInterface(Node):
         self.get_logger().info(
             f"Navigation demo started (mode={self._mode}), waiting for Nav2..."
         )
+        
+        # Navigator
+        self._navigator = BasicNavigator()
+            
         # Create a timer that calls initialize_navigation once after 5 seconds
         self._init_timer = self.create_timer(5.0, self._initialize_navigation_callback)
 
@@ -39,9 +43,6 @@ class NavigationDemoInterface(Node):
         self._init_timer.cancel()
 
         try:
-            # Navigator
-            self._navigator = BasicNavigator()
-
             # Set the initial pose of the robot
             self.localize()
 

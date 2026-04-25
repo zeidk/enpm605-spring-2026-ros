@@ -2,7 +2,7 @@
 <package format="3">
   <name>lecture13_meta</name>
   <version>0.0.1</version>
-  <description>Metapackage for Lecture 13 (mapping and navigation with Nav2). Groups mapping_navigation_demo.</description>
+  <description>Metapackage for Lecture 13 (mapping and navigation with Nav2). Groups nav_demo.</description>
   <maintainer email="zeidk@umd.edu">Zeid Kootbally</maintainer>
   <license>Apache-2.0</license>
 
@@ -33,7 +33,7 @@
   <exec_depend>rosbot_utils</exec_depend>
 
   <!-- Lecture 13 Python packages -->
-  <exec_depend>mapping_navigation_demo</exec_depend>
+  <exec_depend>nav_demo</exec_depend>
 
   <export>
     <build_type>ament_cmake</build_type>
