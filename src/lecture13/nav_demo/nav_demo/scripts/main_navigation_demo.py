@@ -1,12 +1,12 @@
 """Entry point for the navigation demo node."""
 
 import rclpy
-from nav_demo.navigation_demo_interface import NavigationDemoInterface
+from nav_demo.navigation_demo import NavigationDemo
 
 
 def main(args=None):
     rclpy.init(args=args)
-    node = NavigationDemoInterface("navigation_node")
+    node = NavigationDemo("navigation_node")
     executor = rclpy.executors.MultiThreadedExecutor()
     executor.add_node(node)
     try:

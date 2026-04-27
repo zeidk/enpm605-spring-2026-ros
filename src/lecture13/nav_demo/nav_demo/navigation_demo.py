@@ -8,7 +8,7 @@ from tf2_ros import Buffer, TransformListener
 import tf_transformations
 
 
-class NavigationDemoInterface(Node):
+class NavigationDemo(Node):
     """
     Example of a class that uses the BasicNavigator class to navigate the robot.
     """

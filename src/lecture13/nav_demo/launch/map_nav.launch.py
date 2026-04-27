@@ -60,7 +60,7 @@ def generate_launch_description():
     # Resolve default map path eagerly so it propagates cleanly into
     # nav2_bringup's localization_launch.py (PathJoinSubstitution defaults
     # don't always survive IncludeLaunchDescription).
-    default_map_path = os.path.join(pkg_share, "maps", "husarion_world.yaml")
+    default_map_path = os.path.join(pkg_share, "maps", "husarion_map.yaml")
     map_arg = DeclareLaunchArgument(
         "map",
         default_value=default_map_path,

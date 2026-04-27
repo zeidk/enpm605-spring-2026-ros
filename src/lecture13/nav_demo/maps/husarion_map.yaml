@@ -1,4 +1,4 @@
-image: husarion_world.pgm
+image: husarion_map.pgm
 mode: trinary
 resolution: 0.050
 origin: [-11.809, -10.197, 0]
