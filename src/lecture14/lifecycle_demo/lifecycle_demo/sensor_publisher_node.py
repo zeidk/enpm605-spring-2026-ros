@@ -11,7 +11,6 @@ CLI or a supervisor node), making this a good counterpart to the
 self-cycling example that drives its own transitions.
 """
 
-import rclpy
 from rclpy.lifecycle import LifecycleNode, TransitionCallbackReturn
 from std_msgs.msg import String
 
@@ -43,6 +42,8 @@ class SensorPublisher(LifecycleNode):
         self._publisher = None
         self._timer = None
         self._counter = 0
+        self.get_logger().info(f'Node {self.get_name()} started in state: {self._state_machine.current_state[1]}')
+        
 
     def on_configure(self, state):
         """Allocate the lifecycle publisher when entering Inactive.
@@ -58,9 +59,11 @@ class SensorPublisher(LifecycleNode):
             TransitionCallbackReturn.SUCCESS on successful configuration.
         """
         self.get_logger().info(f'Configuring from: {state.label}')
-        self._publisher = self.create_lifecycle_publisher(
-            String, 'sensor_data', 10
-        )
+        try:
+            self._publisher = self.create_lifecycle_publisher(String, 'sensor_data', 10)
+        except Exception as e:
+            self.get_logger().error(f'Configuration failed: {e}')
+            return TransitionCallbackReturn.FAILURE
         return TransitionCallbackReturn.SUCCESS
 
     def on_activate(self, state):

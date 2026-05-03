@@ -7,7 +7,6 @@ Panels:
         - /TF1/Frames1
         - /TF1/Tree1
         - /Global Planner1/Downsampled Costmap1
-        - /Global Planner1/Downsampled Costmap1/Status1
         - /Realsense1/RealsenseCamera1
       Splitter Ratio: 0.5833333134651184
     Tree Height: 380
@@ -181,21 +180,129 @@ Visualization Manager:
       Value: true
       Visual Enabled: true
     - Class: rviz_default_plugins/TF
-      Enabled: false
+      Enabled: true
       Filter (blacklist): ""
       Filter (whitelist): ""
       Frame Timeout: 15
       Frames:
         All Enabled: false
+        base_link:
+          Value: true
+        body_link:
+          Value: true
+        camera_mount_link:
+          Value: true
+        cover_link:
+          Value: true
+        fl_range:
+          Value: true
+        fl_wheel_link:
+          Value: true
+        fr_range:
+          Value: true
+        fr_wheel_link:
+          Value: true
+        imu_link:
+          Value: true
+        laser:
+          Value: true
+        map:
+          Value: true
+        oak_imu_frame:
+          Value: true
+        oak_left_camera_frame:
+          Value: true
+        oak_left_camera_optical_frame:
+          Value: true
+        oak_link:
+          Value: true
+        oak_model_origin:
+          Value: true
+        oak_rgb_camera_frame:
+          Value: true
+        oak_rgb_camera_optical_frame:
+          Value: true
+        oak_right_camera_frame:
+          Value: true
+        oak_right_camera_optical_frame:
+          Value: true
+        odom:
+          Value: true
+        rl_range:
+          Value: true
+        rl_wheel_link:
+          Value: true
+        rplidar_link:
+          Value: true
+        rr_range:
+          Value: true
+        rr_wheel_link:
+          Value: true
+        survivor_1:
+          Value: true
+        survivor_2:
+          Value: true
+        survivor_3:
+          Value: true
+        survivor_4:
+          Value: true
       Marker Scale: 1
       Name: TF
       Show Arrows: true
       Show Axes: true
       Show Names: false
       Tree:
-        {}
+        map:
+          odom:
+            base_link:
+              body_link:
+                camera_mount_link:
+                  oak_link:
+                    oak_imu_frame:
+                      {}
+                    oak_left_camera_frame:
+                      oak_left_camera_optical_frame:
+                        {}
+                    oak_model_origin:
+                      {}
+                    oak_rgb_camera_frame:
+                      oak_rgb_camera_optical_frame:
+                        {}
+                    oak_right_camera_frame:
+                      oak_right_camera_optical_frame:
+                        {}
+                cover_link:
+                  rplidar_link:
+                    laser:
+                      {}
+                fl_range:
+                  {}
+                fl_wheel_link:
+                  {}
+                fr_range:
+                  {}
+                fr_wheel_link:
+                  {}
+                imu_link:
+                  {}
+                rl_range:
+                  {}
+                rl_wheel_link:
+                  {}
+                rr_range:
+                  {}
+                rr_wheel_link:
+                  {}
+          survivor_1:
+            {}
+          survivor_2:
+            {}
+          survivor_3:
+            {}
+          survivor_4:
+            {}
       Update Interval: 0
-      Value: false
+      Value: true
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
@@ -483,7 +590,8 @@ Visualization Manager:
           Enabled: true
           Name: Trajectories
           Namespaces:
-            {}
+            Candidate Trajectories: true
+            Optimal Trajectory: true
           Topic:
             Depth: 5
             Durability Policy: Volatile
@@ -639,7 +747,7 @@ Visualization Manager:
   Value: true
   Views:
     Current:
-      Angle: -0.7808005213737488
+      Angle: -0.0008005518466234207
       Class: rviz_default_plugins/TopDownOrtho
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
@@ -649,11 +757,11 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Scale: 55.34888458251953
+      Scale: 125.2637710571289
       Target Frame: <Fixed Frame>
       Value: TopDownOrtho (rviz_default_plugins)
-      X: -0.9969030618667603
-      Y: 2.8835158348083496
+      X: 0.16544099152088165
+      Y: 0.11858963966369629
     Saved: ~
 Window Geometry:
   Displays:

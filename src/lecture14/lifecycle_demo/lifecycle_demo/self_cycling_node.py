@@ -28,7 +28,9 @@ class SelfCyclingNode(LifecycleNode):
     Attributes:
         _CYCLE (list[int]): Ordered transition IDs applied in round-robin.
         _publisher: Lifecycle publisher created in ``on_configure``.
-        _pub_timer: Timer driving the publish callback while active.
+        _timer: Timer driving the publish callback while active.
+        _counter (int): Sequence number embedded in each message; reset
+            to 0 on cleanup so a fresh configure starts from zero.
         _step (int): Index into ``_CYCLE`` for the next transition.
         _cli: Async client for this node's ``change_state`` service.
         _cycle_timer: Timer that periodically requests the next transition.
@@ -51,14 +53,16 @@ class SelfCyclingNode(LifecycleNode):
         """
         super().__init__('self_cycling_node')
         self._publisher = None
-        self._pub_timer = None
+        self._timer = None
+        self._counter = 0
         self._step = 0
         self._cli = self.create_client(
             ChangeState,
-            '/self_cycling_node/change_state',
+            f'/{self.get_name()}/change_state',
         )
         self._cycle_timer = self.create_timer(5.0, self._advance_state)
-        self.get_logger().info('Node created. Cycling starts in 5 s.')
+        # print the current state of this node (retrieve the node name and its state dynamically)
+        self.get_logger().info(f'Node {self.get_name()} started in state: {self._state_machine.current_state[1]}')
 
     def _advance_state(self):
         """Request the next transition from this node's lifecycle service.
@@ -76,58 +80,70 @@ class SelfCyclingNode(LifecycleNode):
         req = ChangeState.Request()
         req.transition.id = transition_id
 
+        previous_state = self._state_machine.current_state[1]
         future = self._cli.call_async(req)
-        future.add_done_callback(self._on_change_state_done)
+        future.add_done_callback(
+            lambda f: self._on_change_state_done(f, previous_state)
+        )
 
         self._step += 1
 
-    def _on_change_state_done(self, future):
+    def _on_change_state_done(self, future, previous_state):
         """Log the outcome of an asynchronous ``change_state`` call.
 
         Args:
             future: Future returned by ``call_async``. Its result holds
                 the ``ChangeState.Response`` whose ``success`` flag
                 indicates whether the transition was accepted.
+            previous_state: Lifecycle state label captured just before
+                the transition request was sent.
         """
         result = future.result()
+        current_state = self._state_machine.current_state[1]
         if result is not None and result.success:
-            self.get_logger().info('Transition succeeded.')
+            self.get_logger().info(
+                f'Transition succeeded: {previous_state} -> {current_state}'
+            )
         else:
-            self.get_logger().error('Transition failed.')
+            self.get_logger().error(
+                f'Transition failed from {previous_state}. Current state: {current_state}'
+            )
 
     def on_configure(self, state):
-        """Allocate resources when entering the Inactive state.
+        """Allocate the lifecycle publisher when entering Inactive.
 
-        Creates the lifecycle publisher on the ``sensor_data`` topic.
-        The publisher exists but is inactive until ``on_activate``.
+        Creates the ``sensor_data`` publisher. The publisher exists but
+        does not emit messages until the node is activated.
 
         Args:
-            state: Previous lifecycle state (provided by the framework).
+            state: Previous lifecycle state (provided by the framework);
+                its ``label`` is logged for traceability.
 
         Returns:
             TransitionCallbackReturn.SUCCESS on successful configuration.
         """
-        self._publisher = self.create_lifecycle_publisher(
-            String, 'sensor_data', 10
-        )
-        self.get_logger().info('Configured: publisher created.')
+        self.get_logger().info(f'Configuring from: {state.label}')
+        try:
+            self._publisher = self.create_lifecycle_publisher(String, 'sensor_data', 10)
+        except Exception as e:
+            self.get_logger().error(f'Configuration failed: {e}')
+            return TransitionCallbackReturn.FAILURE
         return TransitionCallbackReturn.SUCCESS
 
     def on_activate(self, state):
         """Start publishing when entering the Active state.
 
         Delegates to the base class to activate the lifecycle publisher,
-        then starts a 1 Hz timer that drives ``_publish``.
+        then starts a 1 Hz timer that drives ``_publish_sensor_data``.
 
         Args:
             state: Previous lifecycle state (provided by the framework).
 
         Returns:
-            TransitionCallbackReturn.SUCCESS when the timer is started.
+            TransitionCallbackReturn.SUCCESS once the timer is started.
         """
         super().on_activate(state)
-        self._pub_timer = self.create_timer(1.0, self._publish)
-        self.get_logger().info('Active: publishing started.')
+        self._timer = self.create_timer(1.0, self._publish_sensor_data)
         return TransitionCallbackReturn.SUCCESS
 
     def on_deactivate(self, state):
@@ -143,18 +159,17 @@ class SelfCyclingNode(LifecycleNode):
         Returns:
             TransitionCallbackReturn.SUCCESS after the timer is stopped.
         """
-        if self._pub_timer is not None:
-            self._pub_timer.cancel()
-            self._pub_timer = None
+        if self._timer is not None:
+            self._timer.cancel()
+            self._timer = None
         super().on_deactivate(state)
-        self.get_logger().info('Inactive: publishing stopped.')
         return TransitionCallbackReturn.SUCCESS
 
     def on_cleanup(self, state):
-        """Release resources when returning to the Unconfigured state.
+        """Release resources when returning to Unconfigured.
 
-        Drops the lifecycle publisher so the next ``on_configure`` call
-        starts from a clean slate.
+        Drops the lifecycle publisher and resets the reading counter so
+        the next ``on_configure`` call starts from a clean slate.
 
         Args:
             state: Previous lifecycle state (provided by the framework).
@@ -163,11 +178,12 @@ class SelfCyclingNode(LifecycleNode):
             TransitionCallbackReturn.SUCCESS once resources are released.
         """
         self._publisher = None
-        self.get_logger().info('Unconfigured: resources released.')
+        self._counter = 0
         return TransitionCallbackReturn.SUCCESS
 
-    def _publish(self):
-        """Publish a fixed ``std_msgs/String`` message while active."""
-        msg = String(data=f'Cycling data')
+    def _publish_sensor_data(self):
+        """Publish the next reading and advance the sequence counter."""
+        msg = String(data=f'Reading {self._counter}')
         self._publisher.publish(msg)
         self.get_logger().info(f'Published: {msg.data}')
+        self._counter += 1
