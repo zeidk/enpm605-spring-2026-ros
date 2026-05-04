@@ -31,6 +31,7 @@
 
   <!-- Lecture 14 Python packages -->
   <exec_depend>lifecycle_demo</exec_depend>
+  <exec_depend>nav_demo</exec_depend>
 
   <export>
     <build_type>ament_cmake</build_type>

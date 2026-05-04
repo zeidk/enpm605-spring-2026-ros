@@ -1,0 +1,260 @@
+{
+  "configById": {
+    "TransformTree!2v3i7ja": {},
+    "RawMessages!1q27cvr": {
+      "defaultExpanded": false,
+      "topicPath": "/odometry/filtered"
+    },
+    "RawMessages!2b4zdgb": {
+      "defaultExpanded": false,
+      "topicPath": "/cmd_vel"
+    },
+    "Plot!3llj5uy": {
+      "xAxisVal": "timestamp",
+      "paths": [
+        {
+          "timestampMethod": "receiveTime",
+          "value": "/odometry/filtered.pose.pose.position.x",
+          "enabled": true,
+          "color": "#4e98e2",
+          "id": "d8020829-4b9e-4525-8b0b-e07444b9e49b",
+          "label": "Odometry X"
+        },
+        {
+          "timestampMethod": "receiveTime",
+          "value": "/odometry/filtered.pose.pose.position.y",
+          "enabled": true,
+          "color": "#f5774d",
+          "id": "6396c384-76c1-4e4e-b145-ed8d0c523759",
+          "label": "Odometry Y"
+        }
+      ],
+      "xAxisDisplayMethod": "absolute",
+      "timeWindowMode": "automatic",
+      "foxglovePanelTitle": "Position",
+      "showPlotValuesInLegend": true,
+      "xAxisLabel": "Timestamp",
+      "yAxisLabel": "Meter"
+    },
+    "Plot!kagg8v": {
+      "foxglovePanelTitle": "Velocity",
+      "xAxisLabel": "Timestamp",
+      "yAxisLabel": "Velocity",
+      "paths": [
+        {
+          "timestampMethod": "receiveTime",
+          "value": "/cmd_vel.twist.linear.x",
+          "enabled": true,
+          "color": "#5fe34f",
+          "id": "222db734-7078-475d-9044-4a10b99b9522",
+          "label": "Linear X"
+        },
+        {
+          "timestampMethod": "receiveTime",
+          "value": "/cmd_vel.twist.angular.z",
+          "enabled": true,
+          "color": "#f54cd4",
+          "id": "31d32ab4-31eb-4ca8-b384-e1195b854f88",
+          "label": "Angular Z"
+        }
+      ]
+    },
+    "3D!4cjsnli": {
+      "cameraState": {
+        "perspective": true,
+        "distance": 28.63945562104316,
+        "phi": 35.47683923705895,
+        "thetaOffset": 25.66757493188381,
+        "targetOffset": [
+          3.389726178186495,
+          -10.57291726023792,
+          -1.7997689696663942e-16
+        ],
+        "target": [
+          0,
+          0,
+          0
+        ],
+        "targetOrientation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "fovy": 45,
+        "near": 0.5,
+        "far": 5000
+      },
+      "followMode": "follow-position",
+      "fixedFrame": "odom",
+      "scene": {
+        "enableStats": false,
+        "ignoreColladaUpAxis": false,
+        "syncCamera": true,
+        "transforms": {
+          "visible": true
+        }
+      },
+      "transforms": {
+        "frame:body_link": {
+          "visible": false
+        },
+        "frame:camera_mount_link": {
+          "visible": false
+        },
+        "frame:oak_link": {
+          "visible": false
+        },
+        "frame:oak_imu_frame": {
+          "visible": false
+        },
+        "frame:oak_left_camera_frame": {
+          "visible": false
+        },
+        "frame:oak_left_camera_optical_frame": {
+          "visible": false
+        },
+        "frame:oak_model_origin": {
+          "visible": false
+        },
+        "frame:oak_rgb_camera_frame": {
+          "visible": false
+        },
+        "frame:oak_rgb_camera_optical_frame": {
+          "visible": false
+        },
+        "frame:oak_right_camera_frame": {
+          "visible": false
+        },
+        "frame:oak_right_camera_optical_frame": {
+          "visible": false
+        },
+        "frame:cover_link": {
+          "visible": false
+        },
+        "frame:rplidar_link": {
+          "visible": false
+        },
+        "frame:laser": {
+          "visible": false
+        },
+        "frame:fl_range": {
+          "visible": false
+        },
+        "frame:fl_wheel_link": {
+          "visible": true
+        },
+        "frame:fr_range": {
+          "visible": false
+        },
+        "frame:fr_wheel_link": {
+          "visible": true
+        },
+        "frame:imu_link": {
+          "visible": false
+        },
+        "frame:rl_range": {
+          "visible": false
+        },
+        "frame:rr_range": {
+          "visible": false
+        }
+      },
+      "topics": {
+        "/map": {
+          "visible": true
+        },
+        "/scan": {
+          "visible": true,
+          "colorField": "intensity",
+          "colorMode": "gradient",
+          "colorMap": "turbo",
+          "pointShape": "square",
+          "gradient": [
+            "#692f35ff",
+            "rgba(227, 177, 135, 1)"
+          ]
+        }
+      },
+      "layers": {
+        "grid": {
+          "visible": true,
+          "drawBehind": false,
+          "instanceId": "b7fde9a1-ca4f-40ea-a3ec-cae6bbe1aecc",
+          "layerId": "foxglove.Grid",
+          "size": 10,
+          "divisions": 10,
+          "lineWidth": 1,
+          "color": "#248eff",
+          "position": [
+            0,
+            0,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "frameId": "odom"
+        }
+      },
+      "publish": {
+        "type": "point",
+        "poseTopic": "/move_base_simple/goal",
+        "pointTopic": "/clicked_point",
+        "poseEstimateTopic": "/initialpose",
+        "poseEstimateXDeviation": 0.5,
+        "poseEstimateYDeviation": 0.5,
+        "poseEstimateThetaDeviation": 0.26179939
+      },
+      "synchronize": false,
+      "imageMode": {},
+      "foxglovePanelTitle": "Robot pose"
+    },
+    "TopicGraph!20j0ns9": {},
+    "Tab!3v46ctw": {
+      "activeTabIdx": 0,
+      "tabs": [
+        {
+          "layout": "TransformTree!2v3i7ja",
+          "title": ""
+        }
+      ]
+    }
+  },
+  "layout": {
+    "direction": "row",
+    "first": {
+      "first": "RawMessages!2b4zdgb",
+      "second": "RawMessages!1q27cvr",
+      "direction": "column"
+    },
+    "second": {
+      "direction": "row",
+      "first": {
+        "first": "Plot!3llj5uy",
+        "second": "Plot!kagg8v",
+        "direction": "column"
+      },
+      "second": {
+        "direction": "row",
+        "first": {
+          "first": "3D!4cjsnli",
+          "second": "TopicGraph!20j0ns9",
+          "direction": "column",
+          "splitPercentage": 67.75456919060052
+        },
+        "second": "Tab!3v46ctw",
+        "splitPercentage": 45.68268821777968
+      },
+      "splitPercentage": 33.24519294758605
+    },
+    "splitPercentage": 17.08630817894261
+  },
+  "globalVariables": {},
+  "playbackConfig": {
+    "speed": 1
+  },
+  "userNodes": {}
+}
